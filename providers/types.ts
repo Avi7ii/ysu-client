@@ -772,6 +772,7 @@ export interface TrainingPlan {
   courseName: string;
   courseCode?: string;
   credit?: string;
+  isDegreeCourse: boolean;
   courseType?: string;
   required: boolean;
   term?: string;

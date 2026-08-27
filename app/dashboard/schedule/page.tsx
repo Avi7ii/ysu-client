@@ -24,7 +24,7 @@ import { useMobileHeaderRight } from "@/lib/stores/mobile-header";
 import { useClassPeriods, useCurrentWeek, useExams, useSchedule, useTermCalendar } from "@/providers/hooks";
 import { ChevronLeft, ChevronRight, Search, Grid3x2, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { isCourseActiveInWeek, periodIsInUse } from "./schedule-utils";
+import { isCourseActiveInWeek, periodIsInUse, resolveInitialScheduleWeek } from "./schedule-utils";
 import { computeExamBlocks } from "./exam-blocks";
 import { ScheduleTablet } from "./schedule-tablet";
 import { ScheduleMobile } from "./schedule-mobile";
@@ -116,13 +116,12 @@ export default function SchedulePage() {
   });
 
   useEffect(() => {
-    if (currentWeek?.week) {
-      setSelectedWeek((curr) => (curr === 0 ? currentWeek.week : curr));
-      return;
-    }
-    if (termCalendar?.startDate) {
-      setSelectedWeek((curr) => (curr === 0 ? 1 : curr));
-    }
+    if (!currentWeek && !termCalendar?.startDate) return;
+    setSelectedWeek((curr) =>
+      curr <= 0
+        ? resolveInitialScheduleWeek(currentWeek, termCalendar?.startDate)
+        : curr,
+    );
   }, [currentWeek, termCalendar?.startDate]);
 
   useEffect(() => {
@@ -253,7 +252,7 @@ export default function SchedulePage() {
               <ChevronRight />
             </Button>
           </div>
-          {currentWeek?.week && (
+          {currentWeek && currentWeek.week >= 1 && (
             <Badge variant="secondary">{t("schedule.currentWeekBadge", { week: currentWeek.week })}</Badge>
           )}
         </div>

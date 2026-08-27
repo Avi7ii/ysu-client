@@ -160,7 +160,7 @@ export default function TrainingPlanPage() {
     const keyword = search.trim().toLowerCase();
     return (plans.data ?? []).filter((p) => {
       if (keyword) {
-        const haystack = `${p.courseName ?? ""} ${p.courseCode ?? ""}`.toLowerCase();
+        const haystack = (p.courseName ?? "").toLowerCase();
         if (!haystack.includes(keyword)) return false;
       }
       if (requiredFilter === REQUIRED_YES && !p.required) return false;
@@ -385,10 +385,8 @@ export default function TrainingPlanPage() {
                   <TableHead>
                     {t("trainingPlan.table.courseName")}
                   </TableHead>
-                  <TableHead>
-                    {t("trainingPlan.table.courseCode")}
-                  </TableHead>
                   <TableHead>{t("trainingPlan.table.credit")}</TableHead>
+                  <TableHead>{t("trainingPlan.table.degreeCourse")}</TableHead>
                   <TableHead>{t("trainingPlan.table.required")}</TableHead>
                   <TableHead>{t("trainingPlan.table.term")}</TableHead>
                   <TableHead>{t("trainingPlan.table.group")}</TableHead>
@@ -412,8 +410,14 @@ export default function TrainingPlanPage() {
                       <TableCell className="font-medium">
                         {p.courseName}
                       </TableCell>
-                      <TableCell>{p.courseCode}</TableCell>
                       <TableCell>{p.credit}</TableCell>
+                      <TableCell>
+                        <Badge variant={p.isDegreeCourse ? "default" : "outline"}>
+                          {p.isDegreeCourse
+                            ? t("trainingPlan.table.yes")
+                            : t("trainingPlan.table.no")}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         {p.required ? (
                           <Badge variant="default">

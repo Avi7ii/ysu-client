@@ -224,6 +224,7 @@ export interface TrainingPlan {
   readonly courseName: string;
   readonly courseCode: string;
   readonly credit: string;
+  readonly isDegreeCourse: boolean;
   readonly courseType: string;
   readonly required: boolean;
   readonly term: string;
@@ -2450,6 +2451,7 @@ function parseTrainingPlan(raw: Record<string, unknown>): TrainingPlan {
     courseName: rawStr(raw, 'KCM'),
     courseCode: rawStr(raw, 'KCH'),
     credit: rawStr(raw, 'XF'),
+    isDegreeCourse: toBool(raw['SFZGKC']),
     courseType: rawStr(raw, 'KCXZDM'),
     required: TRAINING_REQUIRED_TOKENS.has(kcxzdm),
     term: rawStr(raw, 'XNXQ', 'JHXNXQ'),

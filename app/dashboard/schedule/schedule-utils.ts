@@ -65,6 +65,23 @@ function parseLocalDate(value: string | undefined): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+export function resolveInitialScheduleWeek(
+  currentWeek: CurrentWeek | null,
+  termStartDate?: string,
+  now = new Date(),
+): number {
+  const firstDay = parseLocalDate(termStartDate);
+  if (firstDay && now.getTime() < firstDay.getTime()) return 1;
+  if (currentWeek && Number.isFinite(currentWeek.week) && currentWeek.week >= 1) {
+    return currentWeek.week;
+  }
+  if (firstDay) {
+    const elapsedDays = Math.floor((now.getTime() - firstDay.getTime()) / 86_400_000);
+    return Math.max(1, Math.floor(elapsedDays / 7) + 1);
+  }
+  return 1;
+}
+
 function weekLabelsFromStart(startDate: string | undefined, week: number): (string | null)[] | null {
   if (week <= 0) return null;
   const firstDay = parseLocalDate(startDate);

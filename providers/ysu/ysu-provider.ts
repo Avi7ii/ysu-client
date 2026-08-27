@@ -1144,6 +1144,7 @@ export class YSUProvider extends BaseProvider {
       courseName: row.courseName ?? "",
       courseCode: row.courseCode ?? undefined,
       credit: row.credit ?? undefined,
+      isDegreeCourse: row.isDegreeCourse,
       courseType: row.courseType ?? undefined,
       required: row.required ?? false,
       term: row.term ?? undefined,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CurrentWeek } from "@/providers/types";
-import { computeWeekDateLabels } from "./schedule-utils";
+import { computeWeekDateLabels, resolveInitialScheduleWeek } from "./schedule-utils";
 
 const staleCurrentWeek: CurrentWeek = {
   week: 1,
@@ -50,5 +50,27 @@ describe("computeWeekDateLabels", () => {
       "9/12",
       "9/13",
     ]);
+  });
+});
+
+describe("resolveInitialScheduleWeek", () => {
+  it("snaps a negative holiday week to week 1 before the term starts", () => {
+    expect(
+      resolveInitialScheduleWeek(
+        { week: -1, weekday: 4, date: "2026-08-27", semester: "2026-2027-1" },
+        "2026-08-31",
+        new Date(2026, 7, 27, 15, 40),
+      ),
+    ).toBe(1);
+  });
+
+  it("keeps a valid current teaching week", () => {
+    expect(
+      resolveInitialScheduleWeek(
+        { week: 3, weekday: 2, date: "2026-09-15", semester: "2026-2027-1" },
+        "2026-08-31",
+        new Date(2026, 8, 15),
+      ),
+    ).toBe(3);
   });
 });
