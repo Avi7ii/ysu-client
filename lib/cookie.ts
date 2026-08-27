@@ -356,6 +356,12 @@ export async function fetchStateless(req: HttpRequest): Promise<HttpResponse> {
 import { isCapacitor } from './native/platform';
 import { getCustomUserAgent } from './custom-user-agent';
 import { useActivationStore } from './stores/activation';
+import {
+  classifyRuntimeRequest,
+  recordRuntimeRequest,
+  recordRuntimeResponse,
+  recordRuntimeTransportError,
+} from './runtime-diagnostics';
 
 // Cache Capacitor core module to avoid dynamic import overhead on every request.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -367,12 +373,20 @@ async function getCapacitorCore(): Promise<any> {
 }
 
 async function send(jar: SimpleCookieJar, req: HttpRequest): Promise<HttpResponse> {
-  if (isCapacitor()) {
-    return capacitorHttpSend(jar, req);
+  const phase = classifyRuntimeRequest(req.url);
+  if (phase) recordRuntimeRequest(phase, req.method);
+  try {
+    const response = isCapacitor()
+      ? await capacitorHttpSend(jar, req)
+      // Web 端无法直连教务系统（CORS + Cookie/User-Agent/Referer 为浏览器
+      // forbidden header），统一走 EdgeOne 边缘函数代理。
+      : await proxyHttpSend(jar, req);
+    if (phase) recordRuntimeResponse(phase, req.method, response, req.url);
+    return response;
+  } catch (error) {
+    if (phase) recordRuntimeTransportError(phase, req.method, error);
+    throw error;
   }
-  // Web 端无法直连教务系统（CORS + Cookie/User-Agent/Referer 为浏览器
-  // forbidden header），统一走 EdgeOne 边缘函数代理。
-  return proxyHttpSend(jar, req);
 }
 
 /**

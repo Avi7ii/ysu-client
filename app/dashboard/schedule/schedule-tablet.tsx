@@ -34,6 +34,7 @@ interface Props {
   currentWeekday: number;
   currentWeek: CurrentWeek | null;
   selectedWeek: number;
+  termStartDate?: string;
   nowMinutes: number;
 }
 
@@ -41,7 +42,7 @@ const DAYS = [1, 2, 3, 4, 5, 6, 7] as const;
 const LUNCH_AFTER = 4;
 const DINNER_AFTER = 8;
 
-export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, selectedWeek, nowMinutes }: Props) {
+export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, selectedWeek, termStartDate, nowMinutes }: Props) {
   const { t } = useTranslation();
   const [overlapDialog, setOverlapDialog] = useState<{ day: number; section: number; courses: Course[] } | null>(null);
   const [activityCourse, setActivityCourse] = useState<Course | null>(null);
@@ -52,7 +53,10 @@ export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, 
 
   const isCurrentWeek = currentWeek?.week === selectedWeek;
   const timeMap = useMemo(() => buildSectionTimeMap(periods), [periods]);
-  const weekDates = useMemo(() => computeWeekDateLabels(currentWeek, selectedWeek), [currentWeek, selectedWeek]);
+  const weekDates = useMemo(
+    () => computeWeekDateLabels(currentWeek, selectedWeek, termStartDate),
+    [currentWeek, selectedWeek, termStartDate],
+  );
 
   const isBlockCurrent = (block: ScheduleBlock): boolean => {
     if (!isCurrentWeek || block.day !== currentWeek?.weekday) return false;
@@ -122,19 +126,19 @@ export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, 
     <>
       <div className="overflow-auto">
         <div
-          className="grid w-full"
+          className="grid w-full bg-background/35 backdrop-blur-[2px]"
           style={{
             gridTemplateColumns: `minmax(48px, 0.4fr) repeat(7, minmax(0, 1fr))`,
             gridTemplateRows,
           }}
         >
-          <div className="border-b border-r border-border" />
+          <div className="border-b border-r border-border bg-background/75 backdrop-blur-md" />
 
           {DAYS.map((d, idx) => (
             <div
               key={d}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 border-b border-border py-1.5 text-[10px] font-medium",
+                "flex flex-col items-center justify-center gap-0.5 border-b border-border bg-background/75 py-1.5 text-[10px] font-medium backdrop-blur-md",
                 idx < 6 && "border-r",
                 isCurrentWeek && d === currentWeekday
                   ? "bg-primary/5 text-primary"
@@ -154,7 +158,7 @@ export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, 
             return (
               <div
                 key={p.section}
-                className="flex flex-col items-center justify-center gap-0.5 border-r border-b border-border py-1 text-[9px] leading-tight text-muted-foreground"
+                className="flex flex-col items-center justify-center gap-0.5 border-r border-b border-border bg-background/75 py-1 text-[9px] leading-tight text-muted-foreground backdrop-blur-md"
                 style={{ gridRow: row, gridColumn: 1 }}
               >
                 <span className="text-xs font-semibold text-foreground">{p.section}</span>
@@ -208,7 +212,7 @@ export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, 
                 <button
                   key={`block-${idx}`}
                   className={cn(
-                    "relative z-10 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-md p-1.5 text-left transition-opacity active:opacity-60",
+                    "relative z-10 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-lg p-1.5 text-left shadow-sm ring-1 ring-background/55 transition-[opacity,transform] active:scale-[0.98] active:opacity-60",
                     COURSE_BG_CLASSES[colorIdx],
                     isBlockCurrent(block) && "ring-1 ring-primary",
                   )}
@@ -223,7 +227,7 @@ export function ScheduleTablet({ courses, periods, currentWeekday, currentWeek, 
                   </span>
                   {c.classroom && (
                     <span className="line-clamp-1 text-[9px] leading-tight text-foreground/70">
-                      {c.classroom}
+                      @{c.classroom}
                     </span>
                   )}
                   {c.teacher && (

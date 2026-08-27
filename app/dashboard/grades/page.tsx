@@ -78,6 +78,7 @@ export default function GradesPage() {
   const didAutoSelectTerm = useRef(false);
 
   const gradesQuery = useGrades({ courseName: queriedCourseName || undefined });
+  const allGradesQuery = useGrades();
   const gpa = useGPAStats();
   const currentWeek = useCurrentWeek();
   const grades = useMemo(() => gradesQuery.data ?? [], [gradesQuery.data]);
@@ -120,6 +121,12 @@ export default function GradesPage() {
         : grades,
     [grades, gachaPending.length, pendingKeys],
   );
+  const allDisplayGrades = useMemo(() => {
+    const source = allGradesQuery.data ?? grades;
+    return gachaPending.length > 0
+      ? source.filter((grade) => !pendingKeys.has(gradeKey(grade)))
+      : source;
+  }, [allGradesQuery.data, gachaPending.length, grades, pendingKeys]);
 
   // --- 玩耍模式:随机抽已有成绩播放动画(不动基线、不隐藏数据) ---
   const [playItems, setPlayItems] = useState<PendingGrade[] | null>(null);
@@ -287,27 +294,6 @@ export default function GradesPage() {
     });
   }, [filtered, sortMode]);
 
-  const termWeightedGpa = useMemo(() => {
-    if (term === ALL_TERM) return null;
-    let totalWeightedPoints = 0;
-    let totalCredits = 0;
-    for (const g of filtered) {
-      // TODO: 此逻辑实际应该由对应 Provider 提供，之后要整合到 ysu provider 里
-      // 仅统计主修培养方案内课程的正考成绩
-      if (!g.isMajor || g.isRetake !== "正考") continue;
-      const gp = numericValue(g.numericGradePoint, g.gradePoint);
-      const cr = numericValue(g.numericCredit, g.credit);
-      if (gp !== undefined && cr !== undefined && cr > 0) {
-        // 学位课学分和绩点按 1.2 倍计入
-        const weight = g.isDegreeCourse ? 1.2 : 1;
-        totalWeightedPoints += gp * cr * weight;
-        totalCredits += cr * weight;
-      }
-    }
-    if (totalCredits === 0) return null;
-    return (totalWeightedPoints / totalCredits).toFixed(4);
-  }, [filtered, term]);
-
   if (loading && grades.length === 0) {
     return (
       <div className="flex flex-col gap-8">
@@ -382,7 +368,11 @@ export default function GradesPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <GpaSummary gpa={gpa.data} termWeightedGpa={termWeightedGpa} />
+      <GpaSummary
+        gpa={gpa.data}
+        grades={allDisplayGrades}
+        currentSemester={currentWeek.data?.semester}
+      />
 
       <Card className="hidden md:block">
         <CardHeader>

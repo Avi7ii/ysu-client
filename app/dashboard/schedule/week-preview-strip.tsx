@@ -12,6 +12,7 @@ interface Props {
   currentWeek: CurrentWeek | null
   selectedWeek: number
   nowMinutes: number
+  totalWeeks?: number
   onSelectWeek: (week: number) => void
   className?: string
 }
@@ -84,6 +85,7 @@ export function WeekPreviewStrip({
   currentWeek,
   selectedWeek,
   nowMinutes,
+  totalWeeks,
   onSelectWeek,
   className,
 }: Props) {
@@ -95,13 +97,13 @@ export function WeekPreviewStrip({
       (course) => course.weekList ?? parseWeeks(course.weeks || "")
     )
     const lastWeek = Math.max(
-      20,
+      totalWeeks ?? 20,
       selectedWeek,
       currentWeek?.week ?? 1,
       ...courseWeeks
     )
     return Array.from({ length: lastWeek }, (_, index) => index + 1)
-  }, [courses, currentWeek?.week, selectedWeek])
+  }, [courses, currentWeek?.week, selectedWeek, totalWeeks])
 
   useEffect(() => {
     const selected = containerRef.current?.querySelector<HTMLElement>(

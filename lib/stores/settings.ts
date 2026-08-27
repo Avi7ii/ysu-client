@@ -40,6 +40,7 @@ interface SettingsState {
   customJwxtBaseUrl: string;
   schoolId: string;
   scheduleCompactMode: boolean;
+  scheduleWeekPreviewEnabled: boolean;
   gpaVisible: boolean;
   gradeGachaEnabled: boolean;
   notifyEnabled: boolean;
@@ -74,6 +75,7 @@ interface SettingsState {
   setCustomJwxtBaseUrl: (url: string) => void;
   setSchoolId: (id: string) => void;
   setScheduleCompactMode: (v: boolean) => void;
+  setScheduleWeekPreviewEnabled: (v: boolean) => void;
   setGpaVisible: (v: boolean) => void;
   setGradeGachaEnabled: (v: boolean) => void;
   setNotifyEnabled: (v: boolean) => void;
@@ -113,6 +115,7 @@ export const useSettingsStore = create<SettingsState>()(
       customJwxtBaseUrl: "",
       schoolId: "ysu",
       scheduleCompactMode: false,
+      scheduleWeekPreviewEnabled: true,
       gpaVisible: false,
       gradeGachaEnabled: true,
       notifyEnabled: false,
@@ -147,6 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
       setCustomJwxtBaseUrl: (customJwxtBaseUrl) => set({ customJwxtBaseUrl }),
       setSchoolId: (schoolId) => set({ schoolId }),
       setScheduleCompactMode: (scheduleCompactMode) => set({ scheduleCompactMode }),
+      setScheduleWeekPreviewEnabled: (scheduleWeekPreviewEnabled) => set({ scheduleWeekPreviewEnabled }),
       setGpaVisible: (gpaVisible) => set({ gpaVisible }),
       setGradeGachaEnabled: (gradeGachaEnabled) => set({ gradeGachaEnabled }),
       setNotifyEnabled: (notifyEnabled) => set({ notifyEnabled }),

@@ -40,6 +40,7 @@ interface Props {
   currentWeekday: number;
   currentWeek: CurrentWeek | null;
   selectedWeek: number;
+  termStartDate?: string;
   nowMinutes: number;
   compact?: boolean;
   onPrevWeek?: () => void;
@@ -59,6 +60,7 @@ export function ScheduleMobile({
   currentWeekday,
   currentWeek,
   selectedWeek,
+  termStartDate,
   nowMinutes,
   compact = false,
   onPrevWeek,
@@ -100,8 +102,8 @@ export function ScheduleMobile({
   }
 
   const weekDates = useMemo(
-    () => computeWeekDateLabels(currentWeek, selectedWeek),
-    [currentWeek, selectedWeek],
+    () => computeWeekDateLabels(currentWeek, selectedWeek, termStartDate),
+    [currentWeek, selectedWeek, termStartDate],
   );
 
   const isCurrentWeek = currentWeek?.week === selectedWeek;
@@ -184,7 +186,7 @@ export function ScheduleMobile({
         key={selectedWeek}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="grid flex-1 w-full select-none animate-in fade-in duration-200"
+        className="grid flex-1 w-full select-none bg-background/35 backdrop-blur-[2px] animate-in fade-in duration-200"
         style={{
           gridTemplateColumns: compact
               ? "minmax(28px, 0.4fr) repeat(7, minmax(0, 1fr))"
@@ -192,13 +194,13 @@ export function ScheduleMobile({
           gridTemplateRows,
         }}
       >
-        <div className="border-b border-r border-border" />
+        <div className="border-b border-r border-border bg-background/75 backdrop-blur-md" />
 
         {DAYS.map((d, idx) => (
           <div
             key={d}
             className={cn(
-              "flex flex-col items-center justify-center border-b border-border text-[10px] font-medium",
+              "flex flex-col items-center justify-center border-b border-border bg-background/75 text-[10px] font-medium backdrop-blur-md",
               compact ? "gap-0 py-0.5" : "gap-0.5 py-1.5",
               idx < 6 && "border-r",
               isCurrentWeek && d === currentWeekday
@@ -219,7 +221,7 @@ export function ScheduleMobile({
           return (
             <div
               key={p.section}
-              className="flex flex-col items-center justify-center gap-0.5 border-r border-b border-border py-1 text-[9px] leading-tight text-muted-foreground"
+              className="flex flex-col items-center justify-center gap-0.5 border-r border-b border-border bg-background/75 py-1 text-[9px] leading-tight text-muted-foreground backdrop-blur-md"
               style={{ gridRow: row, gridColumn: 1 }}
             >
               <span className="text-xs font-semibold text-foreground">{p.section}</span>
@@ -279,7 +281,7 @@ export function ScheduleMobile({
                   setActivityOpen(true);
                 }}
                 className={cn(
-                  "relative z-10 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-md p-1 text-left transition-opacity active:opacity-60",
+                  "relative z-10 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-lg p-1 text-left shadow-sm ring-1 ring-background/55 transition-[opacity,transform] active:scale-[0.98] active:opacity-60",
                   COURSE_BG_CLASSES[colorIdx],
                   isBlockCurrent(block) && "ring-1 ring-primary",
                 )}
@@ -293,7 +295,7 @@ export function ScheduleMobile({
                     "text-[9px] leading-tight text-foreground/70",
                     compact ? "line-clamp-3" : "line-clamp-2",
                   )}>
-                    {c.classroom}
+                    @{c.classroom}
                   </span>
                 )}
                 {!compact && c.teacher && (
@@ -331,7 +333,7 @@ export function ScheduleMobile({
               e.currentTarget.blur();
               setExamDrawer(block);
             }}
-            className="relative z-20 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-md border border-amber-500/50 bg-amber-500/15 p-1 text-left transition-opacity active:opacity-60"
+            className="relative z-20 m-0.5 flex flex-col gap-0.5 overflow-hidden rounded-lg border border-amber-500/50 bg-amber-500/15 p-1 text-left shadow-sm transition-[opacity,transform] active:scale-[0.98] active:opacity-60"
             style={blockStyle(block)}
           >
             <span className="line-clamp-1 text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">

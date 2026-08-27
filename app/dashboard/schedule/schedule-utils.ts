@@ -57,7 +57,36 @@ function formatShortDate(value: string | undefined): string | null {
   return `${date.getMonth() + 1}/${date.getDate()}`;
 }
 
-export function computeWeekDateLabels(currentWeek: CurrentWeek | null, selectedWeek: number): (string | null)[] {
+function parseLocalDate(value: string | undefined): Date | null {
+  if (!value) return null;
+  const match = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function weekLabelsFromStart(startDate: string | undefined, week: number): (string | null)[] | null {
+  if (week <= 0) return null;
+  const firstDay = parseLocalDate(startDate);
+  if (!firstDay) return null;
+  firstDay.setDate(firstDay.getDate() + (week - 1) * 7);
+  return Array.from({ length: 7 }, (_, idx) => {
+    const date = new Date(firstDay);
+    date.setDate(firstDay.getDate() + idx);
+    return `${date.getMonth() + 1}/${date.getDate()}`;
+  });
+}
+
+export function computeWeekDateLabels(
+  currentWeek: CurrentWeek | null,
+  selectedWeek: number,
+  termStartDate?: string,
+): (string | null)[] {
+  // 教务处学期日历的开学日期是周次的唯一锚点。当前周接口在开学前或
+  // 学期切换期可能仍指向上一周，用它反推会造成整整一周的偏差。
+  const calendarLabels = weekLabelsFromStart(termStartDate, selectedWeek);
+  if (calendarLabels) return calendarLabels;
+
   if (!currentWeek?.week) return Array(7).fill(null);
 
   if (Array.isArray(currentWeek.weekDates) && currentWeek.weekDates.length === 7) {

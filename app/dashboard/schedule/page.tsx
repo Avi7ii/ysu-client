@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import {
   Field,
   FieldGroup,
@@ -20,13 +21,14 @@ import {
 import { useTranslation } from "@/lib/i18n/use-translation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useMobileHeaderRight } from "@/lib/stores/mobile-header";
-import { useClassPeriods, useCurrentWeek, useExams, useSchedule } from "@/providers/hooks";
+import { useClassPeriods, useCurrentWeek, useExams, useSchedule, useTermCalendar } from "@/providers/hooks";
 import { ChevronLeft, ChevronRight, Search, Grid3x2, Grid3x3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isCourseActiveInWeek, periodIsInUse } from "./schedule-utils";
 import { computeExamBlocks } from "./exam-blocks";
 import { ScheduleTablet } from "./schedule-tablet";
 import { ScheduleMobile } from "./schedule-mobile";
+import { WeekPreviewStrip } from "./week-preview-strip";
 import { syncScheduleToWidget } from "@/lib/native/widget-bridge";
 import { syncClassAlarmsToNative } from "@/lib/native/notify";
 import { useSettingsStore } from "@/lib/stores/settings";
@@ -36,6 +38,8 @@ export default function SchedulePage() {
   const isMobile = useIsMobile();
   const compactMode = useSettingsStore((s) => s.scheduleCompactMode);
   const setCompactMode = useSettingsStore((s) => s.setScheduleCompactMode);
+  const weekPreviewEnabled = useSettingsStore((s) => s.scheduleWeekPreviewEnabled);
+  const setWeekPreviewEnabled = useSettingsStore((s) => s.setScheduleWeekPreviewEnabled);
   const [selectedWeek, setSelectedWeek] = useState<number>(0);
   const [term, setTerm] = useState("");
   const [queriedTerm, setQueriedTerm] = useState("");
@@ -47,16 +51,20 @@ export default function SchedulePage() {
     includeLabSchedule: true,
   });
   const currentWeekQuery = useCurrentWeek({ semester: queriedTerm || undefined });
+  const termCalendarQuery = useTermCalendar({ semester: queriedTerm || undefined });
   const periodsQuery = useClassPeriods();
   const examsQuery = useExams({ semester: queriedTerm || undefined });
 
   const courses = useMemo(() => scheduleQuery.data ?? [], [scheduleQuery.data]);
   const currentWeek = currentWeekQuery.data ?? null;
+  const termCalendar = termCalendarQuery.data;
   const loading =
     scheduleQuery.isLoading ||
     scheduleQuery.isValidating ||
     currentWeekQuery.isLoading ||
     currentWeekQuery.isValidating ||
+    termCalendarQuery.isLoading ||
+    termCalendarQuery.isValidating ||
     periodsQuery.isLoading ||
     periodsQuery.isValidating;
 
@@ -108,15 +116,20 @@ export default function SchedulePage() {
   });
 
   useEffect(() => {
-    if (!currentWeek?.week) return;
-    setSelectedWeek((curr) => (curr === 0 ? currentWeek.week : curr));
-  }, [currentWeek]);
+    if (currentWeek?.week) {
+      setSelectedWeek((curr) => (curr === 0 ? currentWeek.week : curr));
+      return;
+    }
+    if (termCalendar?.startDate) {
+      setSelectedWeek((curr) => (curr === 0 ? 1 : curr));
+    }
+  }, [currentWeek, termCalendar?.startDate]);
 
   useEffect(() => {
-    const errors = [scheduleQuery.error, currentWeekQuery.error, periodsQuery.error].filter(Boolean);
+    const errors = [scheduleQuery.error, currentWeekQuery.error, termCalendarQuery.error, periodsQuery.error].filter(Boolean);
     if (errors.length === 0) return;
     toast.error(errors[0]?.message || t("app.updating"));
-  }, [scheduleQuery.error, currentWeekQuery.error, periodsQuery.error, t]);
+  }, [scheduleQuery.error, currentWeekQuery.error, termCalendarQuery.error, periodsQuery.error, t]);
 
   useEffect(() => {
     if (!scheduleQuery.data || !currentWeek) return;
@@ -139,6 +152,7 @@ export default function SchedulePage() {
       await Promise.all([
         scheduleQuery.mutate(),
         currentWeekQuery.mutate(),
+        termCalendarQuery.mutate(),
         periodsQuery.mutate(),
       ]);
     } else {
@@ -150,6 +164,15 @@ export default function SchedulePage() {
 
   useMobileHeaderRight(
     <div className="flex items-center gap-0.5">
+      <label className="flex h-8 items-center gap-1 px-1 text-[11px] text-muted-foreground">
+        <span>{t("schedule.weekPreviewShort")}</span>
+        <Switch
+          size="sm"
+          checked={weekPreviewEnabled}
+          onCheckedChange={setWeekPreviewEnabled}
+          aria-label={t("schedule.weekPreviewToggle")}
+        />
+      </label>
       <Button
         variant="ghost"
         size="icon-sm"
@@ -164,7 +187,7 @@ export default function SchedulePage() {
         onClick={() => setFilterDrawerOpen(true)}
       />
     </div>,
-    [selectedWeek, t, compactMode, setCompactMode],
+    [selectedWeek, t, compactMode, setCompactMode, weekPreviewEnabled, setWeekPreviewEnabled],
   );
 
   const filteredCourses = useMemo(() => {
@@ -173,8 +196,8 @@ export default function SchedulePage() {
   }, [courses, selectedWeek]);
 
   const examBlocks = useMemo(
-    () => computeExamBlocks(examsQuery.data ?? [], periods, currentWeek, selectedWeek),
-    [examsQuery.data, periods, currentWeek, selectedWeek],
+    () => computeExamBlocks(examsQuery.data ?? [], periods, currentWeek, selectedWeek, termCalendar?.startDate),
+    [examsQuery.data, periods, currentWeek, selectedWeek, termCalendar?.startDate],
   );
 
   const currentWeekday = currentWeek?.weekday ?? 0;
@@ -250,7 +273,17 @@ export default function SchedulePage() {
     <div className={compactMode && isMobile ? "flex flex-1 flex-col min-h-0" : "flex flex-col gap-6"}>
       <Card className="hidden md:block">
         <CardHeader>
-          <CardTitle>{t("schedule.title")}</CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle>{t("schedule.title")}</CardTitle>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{t("schedule.weekPreviewToggle")}</span>
+              <Switch
+                size="sm"
+                checked={weekPreviewEnabled}
+                onCheckedChange={setWeekPreviewEnabled}
+              />
+            </label>
+          </div>
           <CardDescription>{t("schedule.description")}</CardDescription>
         </CardHeader>
         <CardContent>{renderFilterControls("schedule-desktop")}</CardContent>
@@ -264,6 +297,17 @@ export default function SchedulePage() {
           )}
           style={compactMode ? undefined : { minHeight: "calc(100dvh - 102px)" }}
         >
+          {weekPreviewEnabled && (
+            <WeekPreviewStrip
+              courses={courses}
+              periods={periods}
+              currentWeek={currentWeek}
+              selectedWeek={selectedWeek}
+              nowMinutes={nowMinutes}
+              totalWeeks={termCalendar?.teachingWeeks || termCalendar?.totalWeeks}
+              onSelectWeek={setSelectedWeek}
+            />
+          )}
           <ScheduleMobile
             courses={filteredCourses}
             examBlocks={examBlocks}
@@ -271,6 +315,7 @@ export default function SchedulePage() {
             currentWeekday={currentWeekday}
             currentWeek={currentWeek}
             selectedWeek={selectedWeek}
+            termStartDate={termCalendar?.startDate}
             nowMinutes={nowMinutes}
             compact={compactMode}
             onPrevWeek={() => shiftWeek(-1)}
@@ -279,15 +324,30 @@ export default function SchedulePage() {
         </div>
       ) : (
         <Card>
-          <CardContent className="pt-6">
-            <ScheduleTablet
-              courses={filteredCourses}
-              periods={periods}
-              currentWeekday={currentWeekday}
-              currentWeek={currentWeek}
-              selectedWeek={selectedWeek}
-              nowMinutes={nowMinutes}
-            />
+          <CardContent className="overflow-hidden p-0">
+            {weekPreviewEnabled && (
+              <WeekPreviewStrip
+                courses={courses}
+                periods={periods}
+                currentWeek={currentWeek}
+                selectedWeek={selectedWeek}
+                nowMinutes={nowMinutes}
+                totalWeeks={termCalendar?.teachingWeeks || termCalendar?.totalWeeks}
+                onSelectWeek={setSelectedWeek}
+                className="rounded-t-xl"
+              />
+            )}
+            <div className="p-6">
+              <ScheduleTablet
+                courses={filteredCourses}
+                periods={periods}
+                currentWeekday={currentWeekday}
+                currentWeek={currentWeek}
+                selectedWeek={selectedWeek}
+                termStartDate={termCalendar?.startDate}
+                nowMinutes={nowMinutes}
+              />
+            </div>
           </CardContent>
         </Card>
       )}
