@@ -12,6 +12,7 @@ import {
   fetchWithJar,
   headerSingle,
 } from "@/lib/cookie";
+import { recordRuntimeEnvelope } from "@/lib/runtime-diagnostics";
 import { authorize, getCredentialApplied } from "./cas";
 import {
   serverConfig,
@@ -918,6 +919,7 @@ async function emapPost(
   }
 
   const code = result['code'];
+  recordRuntimeEnvelope(code);
   if (code !== '0' && code !== 0) {
     const msg = typeof result['msg'] === 'string' ? result['msg'] : null;
     const codeVal = typeof code === 'string' || typeof code === 'number' ? code : null;

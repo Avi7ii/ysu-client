@@ -20,10 +20,16 @@ import {
 } from "@/lib/custom-user-agent";
 import { startNativePolling, stopNativePolling } from "@/lib/native/notify";
 import { NotifyPlugin } from "@/lib/native/notify-plugin";
-import { RefreshCw, Trash2, Bug, Bell, Play, Send, Smartphone, Shield, Power, Save, RotateCcw } from "lucide-react";
+import { RefreshCw, Trash2, Bug, Bell, Play, Send, Smartphone, Shield, Power, Save, RotateCcw, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { clearAllCache } from "@/lib/storage/cache";
 import { Switch } from "@/components/ui/switch";
+import {
+  clearRuntimeDiagnostics,
+  getRuntimeDiagnostics,
+  setRuntimeDiagnosticOperation,
+  type RuntimeDiagnosticEntry,
+} from "@/lib/runtime-diagnostics";
 
 interface DiagnosticResult {
   school: {
@@ -70,6 +76,7 @@ interface DiagnosticResult {
     currentWeek: { ok: boolean | null; error?: string };
     mobileAuth: { ok: boolean | null; error?: string };
   };
+  runtimeTrace: readonly RuntimeDiagnosticEntry[];
 }
 
 export default function DebugPage() {
@@ -130,6 +137,7 @@ export default function DebugPage() {
 
   async function runDiagnostics() {
     setLoading(true);
+    clearRuntimeDiagnostics();
     try {
       const platformName = isCapacitor() ? "Capacitor" : "Web (dev)";
       const screenInfo = typeof window !== "undefined"
@@ -209,51 +217,59 @@ export default function DebugPage() {
           currentWeek: { ok: null },
           mobileAuth: { ok: null },
         },
+        runtimeTrace: [],
       };
 
       // API tests (sequential to avoid overwhelming the server)
       if (credential) {
         try {
+          setRuntimeDiagnosticOperation("cas-auth");
           result.apiTests.authSession = diagnostics
             ? { ok: await diagnostics.checkAuth() }
             : { ok: null, error: "Provider diagnostics unavailable" };
         } catch (e) {
           result.apiTests.authSession = { ok: false, error: (e as Error).message };
+        } finally {
+          setRuntimeDiagnosticOperation(undefined);
         }
 
         try {
+          setRuntimeDiagnosticOperation("student-info");
           await provider.getStudentInfo();
           result.apiTests.studentInfo = { ok: true };
         } catch (e) {
           result.apiTests.studentInfo = { ok: false, error: (e as Error).message };
+        } finally {
+          setRuntimeDiagnosticOperation(undefined);
         }
 
         try {
+          setRuntimeDiagnosticOperation("schedule");
           await provider.getSchedule({ courseCategory: "all", includeLabSchedule: true });
           result.apiTests.schedule = { ok: true };
         } catch (e) {
           result.apiTests.schedule = { ok: false, error: (e as Error).message };
+        } finally {
+          setRuntimeDiagnosticOperation(undefined);
         }
 
         try {
+          setRuntimeDiagnosticOperation("current-week");
           await provider.getCurrentWeek();
           result.apiTests.currentWeek = { ok: true };
         } catch (e) {
           result.apiTests.currentWeek = { ok: false, error: (e as Error).message };
+        } finally {
+          setRuntimeDiagnosticOperation(undefined);
         }
 
-        // Mobile auth test: run the full mobile authorization flow
-        try {
-          if (diagnostics?.ensureMobileAuthorized) {
-            await diagnostics.ensureMobileAuthorized();
-            result.apiTests.mobileAuth = { ok: true };
-          } else {
-            result.apiTests.mobileAuth = { ok: null, error: "Provider mobile diagnostics unavailable" };
-          }
-        } catch (e) {
-          result.apiTests.mobileAuth = { ok: false, error: (e as Error).message };
-        }
+        // Deliberately excluded from the authorized read-only compatibility pass.
+        // Obtaining a mobile API token is not needed to locate the shared CAS →
+        // JWXT → EMAP failure point.
+        result.apiTests.mobileAuth = { ok: null, error: "Not run in read-only diagnostic mode" };
       }
+
+      result.runtimeTrace = getRuntimeDiagnostics();
 
       setDiag(result);
     } catch (err) {
@@ -413,6 +429,17 @@ export default function DebugPage() {
     setUaDraft("");
     toast.success(t("debug.userAgentReset"));
     runDiagnostics();
+  }
+
+  async function copyRuntimeTrace() {
+    if (!diag?.runtimeTrace.length) return;
+    const text = diag.runtimeTrace.map((entry) => JSON.stringify(entry)).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("已复制脱敏运行轨迹");
+    } catch {
+      toast.error("复制失败");
+    }
   }
 
   function statusBadge(value: boolean | null | { ok: boolean | null; error?: string }) {
@@ -624,6 +651,37 @@ export default function DebugPage() {
                   )}
                 </div>
               ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-sm">脱敏运行轨迹</CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyRuntimeTrace}
+                  disabled={!diag.runtimeTrace.length}
+                >
+                  <Copy className="size-3.5 mr-1" />
+                  复制
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-2 text-xs text-muted-foreground">
+                仅包含阶段、状态码、响应类型与重定向标记；不包含 URL、账号、Cookie、token 或响应正文。
+              </p>
+              <ScrollArea className="h-44 rounded-md border bg-muted/30 p-2">
+                {diag.runtimeTrace.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">本轮没有可记录的 CAS/JWXT 请求。</span>
+                ) : (
+                  <pre className="text-[10px] font-mono whitespace-pre-wrap">
+                    {diag.runtimeTrace.map((entry) => JSON.stringify(entry)).join("\n")}
+                  </pre>
+                )}
+              </ScrollArea>
             </CardContent>
           </Card>
 
