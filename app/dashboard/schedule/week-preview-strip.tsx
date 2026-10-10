@@ -22,9 +22,7 @@ const PREVIEW_DAYS = [1, 2, 3, 4, 5] as const
 function buildSectionGroups(periods: ClassPeriod[]): number[][] {
   const sections = periods.map((period) => period.section).sort((a, b) => a - b)
   const available =
-    sections.length > 0
-      ? sections
-      : Array.from({ length: 12 }, (_, index) => index + 1)
+    sections.length > 0 ? sections : Array.from({ length: 12 }, (_, index) => index + 1)
   return [
     available.filter((section) => section <= 2),
     available.filter((section) => section >= 3 && section <= 4),
@@ -34,12 +32,7 @@ function buildSectionGroups(periods: ClassPeriod[]): number[][] {
   ]
 }
 
-function groupHasCourse(
-  courses: Course[],
-  week: number,
-  day: number,
-  group: number[]
-) {
+function groupHasCourse(courses: Course[], week: number, day: number, group: number[]) {
   if (group.length === 0) return false
   const first = group[0]
   const last = group[group.length - 1]
@@ -71,11 +64,7 @@ function groupIsPast(
   if (Number.isFinite(endMinute)) return nowMinutes > Number(endMinute)
   if (!lastPeriod?.endTime) return false
   const [hour, minute] = lastPeriod.endTime.split(":").map(Number)
-  return (
-    Number.isFinite(hour) &&
-    Number.isFinite(minute) &&
-    nowMinutes > hour * 60 + minute
-  )
+  return Number.isFinite(hour) && Number.isFinite(minute) && nowMinutes > hour * 60 + minute
 }
 
 // Visual structure independently follows XDYou's dual-licensed class-table week overview.
@@ -143,40 +132,22 @@ export function WeekPreviewStrip({
             aria-pressed={active}
           >
             <span
-              className={cn(
-                "text-[11px] leading-none",
-                isCurrent && "font-semibold text-primary"
-              )}
+              className={cn("text-[11px] leading-none", isCurrent && "font-semibold text-primary")}
             >
               {t("schedule.weekShort", { week })}
             </span>
-            <span
-              className="grid grid-cols-5 gap-x-1.5 gap-y-1"
-              aria-hidden="true"
-            >
+            <span className="grid grid-cols-5 gap-x-1.5 gap-y-1" aria-hidden="true">
               {sectionGroups.flatMap((group, groupIndex) =>
                 PREVIEW_DAYS.map((day) => {
                   const occupied = groupHasCourse(courses, week, day, group)
                   const past =
-                    occupied &&
-                    groupIsPast(
-                      week,
-                      day,
-                      group,
-                      currentWeek,
-                      nowMinutes,
-                      periods
-                    )
+                    occupied && groupIsPast(week, day, group, currentWeek, nowMinutes, periods)
                   return (
                     <span
                       key={`${groupIndex}-${day}`}
                       className={cn(
                         "size-1 rounded-full bg-primary",
-                        occupied
-                          ? past
-                            ? "opacity-45"
-                            : "opacity-100"
-                          : "opacity-20"
+                        occupied ? (past ? "opacity-45" : "opacity-100") : "opacity-20"
                       )}
                     />
                   )

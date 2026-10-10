@@ -35,6 +35,7 @@
  */
 
 // 上游目标白名单：YSU 教务相关域名 + 实践教学平台 IP + 微信扫码登录 + NBU
+// + zanao（森空鸟，私有玩具箱功能；API/CDN 仅明文 HTTP）
 const ALLOWED_HOSTS = new Set([
   'cer.ysu.edu.cn',
   'jwxt.ysu.edu.cn',
@@ -45,6 +46,17 @@ const ALLOWED_HOSTS = new Set([
   'lp.open.weixin.qq.com',
   'uis.nbu.edu.cn',
   'ehall.nbu.edu.cn',
+  'api.app.zanao.com',
+  'b1.cdn.zanao.com',
+  'b2.cdn.zanao.com',
+  // 森空鸟头像：user_info.headimgurl 为微信 http 直链，需代理中转
+  'thirdwx.qlogo.cn',
+  // 17wanxiao 智能水电（空调电表）查询
+  'xqh5.17wanxiao.com',
+  // 燕山大学在线综合支付平台（缴费查询，只读）
+  'epay.ysu.edu.cn',
+  // ehall 一卡通（余额查询，只读）
+  'ehall.ysu.edu.cn',
 ]);
 
 // 允许发起浏览器跨域调用的 Origin（同源请求无 Origin 头，不受限）。

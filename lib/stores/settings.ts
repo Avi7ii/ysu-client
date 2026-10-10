@@ -1,103 +1,104 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import type { UpdateChannel } from "../updater";
-import { migrateLocalStorageKey, STORAGE_KEYS } from "../storage/keys";
+import { create } from "zustand"
+import { persist, createJSONStorage } from "zustand/middleware"
+import type { UpdateChannel } from "../updater"
+import { migrateLocalStorageKey, STORAGE_KEYS } from "../storage/keys"
+import {
+  createDefaultOverviewLayout,
+  normalizeOverviewLayout,
+  type OverviewLayout,
+} from "@/app/dashboard/overview/layout-config"
 
-migrateLocalStorageKey(STORAGE_KEYS.settings, STORAGE_KEYS.legacySettings);
+migrateLocalStorageKey(STORAGE_KEYS.settings, STORAGE_KEYS.legacySettings)
 
-export type CardStyle = "solid" | "translucent" | "glass";
-export type BackgroundStyle = "overlay" | "blur-overlay";
-export type LandingPage = "overview" | "schedule";
+export type CardStyle = "solid" | "translucent" | "glass"
+export type BackgroundStyle = "overlay" | "blur-overlay"
+export type LandingPage = "overview" | "schedule"
 
-export interface FeedbackHistoryItem {
-  id: string;
-  rating: number;
-  text: string;
-  ts: number;
-  replied?: boolean;
-  replyText?: string;
-  repliedAt?: number;
-  notifiedAt?: number;
-  deleted?: boolean;
+interface EpayAccountSettings {
+  lastCheckedAt: number
 }
 
 interface SettingsState {
-  updateMirror: string;
-  updateChannel: UpdateChannel;
-  backgroundImage: string;
-  backgroundOverlayOpacity: number;
-  backgroundStyle: BackgroundStyle;
-  backgroundBlurAmount: number;
-  cardStyle: CardStyle;
-  cardOpacity: number;
-  defaultLandingPage: LandingPage;
-  widgetSyncReminderHours: number;
-  widgetShowNextDaySchedule: boolean;
-  avatarImage: string;
-  customUserAgent: string;
-  customUserAgentEnabled: boolean;
-  customCerBaseUrl: string;
-  customJwxtBaseUrl: string;
-  schoolId: string;
-  scheduleCompactMode: boolean;
-  scheduleWeekPreviewEnabled: boolean;
-  gpaVisible: boolean;
-  gradeGachaEnabled: boolean;
-  notifyEnabled: boolean;
-  notifyCheckInterval: number;
-  notifyGrades: boolean;
-  notifyExams: boolean;
-  notifyNetworkError: boolean;
-  classReminderEnabled: boolean;
-  classReminderMinutes: number;
-  classReminderDays: number;
-  analyticsConsent: boolean;
-  lastAnalyticsDate: string;
-  analyticsPromptVersion: string;
-  feedbackIds: string[];
-  feedbackHistory: FeedbackHistoryItem[];
-  hasHydrated: boolean;
-  setUpdateMirror: (mirror: string) => void;
-  setUpdateChannel: (channel: UpdateChannel) => void;
-  setBackgroundImage: (image: string) => void;
-  setBackgroundOverlayOpacity: (opacity: number) => void;
-  setBackgroundStyle: (style: BackgroundStyle) => void;
-  setBackgroundBlurAmount: (amount: number) => void;
-  setCardStyle: (style: CardStyle) => void;
-  setCardOpacity: (opacity: number) => void;
-  setDefaultLandingPage: (page: LandingPage) => void;
-  setWidgetSyncReminderHours: (hours: number) => void;
-  setWidgetShowNextDaySchedule: (v: boolean) => void;
-  setAvatarImage: (image: string) => void;
-  setCustomUserAgent: (ua: string) => void;
-  setCustomUserAgentEnabled: (v: boolean) => void;
-  setCustomCerBaseUrl: (url: string) => void;
-  setCustomJwxtBaseUrl: (url: string) => void;
-  setSchoolId: (id: string) => void;
-  setScheduleCompactMode: (v: boolean) => void;
-  setScheduleWeekPreviewEnabled: (v: boolean) => void;
-  setGpaVisible: (v: boolean) => void;
-  setGradeGachaEnabled: (v: boolean) => void;
-  setNotifyEnabled: (v: boolean) => void;
-  setNotifyCheckInterval: (v: number) => void;
-  setNotifyGrades: (v: boolean) => void;
-  setNotifyExams: (v: boolean) => void;
-  setNotifyNetworkError: (v: boolean) => void;
-  setClassReminderEnabled: (v: boolean) => void;
-  setClassReminderMinutes: (v: number) => void;
-  setClassReminderDays: (v: number) => void;
-  setAnalyticsConsent: (v: boolean) => void;
-  setLastAnalyticsDate: (v: string) => void;
-  setAnalyticsPromptVersion: (v: string) => void;
-  setFeedbackIds: (ids: string[]) => void;
-  setFeedbackHistory: (items: FeedbackHistoryItem[]) => void;
-  setHasHydrated: (v: boolean) => void;
+  updateMirror: string
+  updateChannel: UpdateChannel
+  backgroundImage: string
+  backgroundOverlayOpacity: number
+  backgroundStyle: BackgroundStyle
+  backgroundBlurAmount: number
+  cardStyle: CardStyle
+  cardOpacity: number
+  defaultLandingPage: LandingPage
+  widgetSyncReminderHours: number
+  widgetShowNextDaySchedule: boolean
+  avatarImage: string
+  customUserAgent: string
+  customUserAgentEnabled: boolean
+  customCerBaseUrl: string
+  customJwxtBaseUrl: string
+  schoolId: string
+  scheduleCompactMode: boolean
+  scheduleWeekPreviewEnabled: boolean
+  gpaVisible: boolean
+  overviewLayout: OverviewLayout
+  gradeGachaEnabled: boolean
+  notifyEnabled: boolean
+  notifyCheckInterval: number
+  notifyGrades: boolean
+  notifyExams: boolean
+  notifyNetworkError: boolean
+  classReminderEnabled: boolean
+  classReminderMinutes: number
+  classReminderDays: number
+  analyticsConsent: boolean
+  lastAnalyticsDate: string
+  analyticsPromptVersion: string
+  /** 缴费提醒检查时间，按学号隔离 */
+  epayAccountSettings: Record<string, EpayAccountSettings>
+  /** 学费未缴自动提醒开关 */
+  epayNotifyEnabled: boolean
+  hasHydrated: boolean
+  setUpdateMirror: (mirror: string) => void
+  setUpdateChannel: (channel: UpdateChannel) => void
+  setBackgroundImage: (image: string) => void
+  setBackgroundOverlayOpacity: (opacity: number) => void
+  setBackgroundStyle: (style: BackgroundStyle) => void
+  setBackgroundBlurAmount: (amount: number) => void
+  setCardStyle: (style: CardStyle) => void
+  setCardOpacity: (opacity: number) => void
+  setDefaultLandingPage: (page: LandingPage) => void
+  setWidgetSyncReminderHours: (hours: number) => void
+  setWidgetShowNextDaySchedule: (v: boolean) => void
+  setAvatarImage: (image: string) => void
+  setCustomUserAgent: (ua: string) => void
+  setCustomUserAgentEnabled: (v: boolean) => void
+  setCustomCerBaseUrl: (url: string) => void
+  setCustomJwxtBaseUrl: (url: string) => void
+  setSchoolId: (id: string) => void
+  setScheduleCompactMode: (v: boolean) => void
+  setScheduleWeekPreviewEnabled: (v: boolean) => void
+  setGpaVisible: (v: boolean) => void
+  setOverviewLayout: (layout: OverviewLayout) => void
+  setGradeGachaEnabled: (v: boolean) => void
+  setNotifyEnabled: (v: boolean) => void
+  setNotifyCheckInterval: (v: number) => void
+  setNotifyGrades: (v: boolean) => void
+  setNotifyExams: (v: boolean) => void
+  setNotifyNetworkError: (v: boolean) => void
+  setClassReminderEnabled: (v: boolean) => void
+  setClassReminderMinutes: (v: number) => void
+  setClassReminderDays: (v: number) => void
+  setAnalyticsConsent: (v: boolean) => void
+  setLastAnalyticsDate: (v: string) => void
+  setAnalyticsPromptVersion: (v: string) => void
+  setEpayNotifyEnabled: (v: boolean) => void
+  setEpayLastCheckedAt: (username: string, ts: number) => void
+  setHasHydrated: (v: boolean) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      updateMirror: "https://ysu.welain.com/updates/",
+      updateMirror: "",
       updateChannel: "stable",
       backgroundImage: "",
       backgroundOverlayOpacity: 75,
@@ -117,6 +118,7 @@ export const useSettingsStore = create<SettingsState>()(
       scheduleCompactMode: false,
       scheduleWeekPreviewEnabled: true,
       gpaVisible: false,
+      overviewLayout: createDefaultOverviewLayout(),
       gradeGachaEnabled: true,
       notifyEnabled: false,
       notifyCheckInterval: 60,
@@ -129,8 +131,8 @@ export const useSettingsStore = create<SettingsState>()(
       analyticsConsent: false,
       lastAnalyticsDate: "",
       analyticsPromptVersion: "",
-      feedbackIds: [],
-      feedbackHistory: [],
+      epayAccountSettings: {},
+      epayNotifyEnabled: true,
       hasHydrated: false,
       setUpdateMirror: (updateMirror) => set({ updateMirror }),
       setUpdateChannel: (updateChannel) => set({ updateChannel }),
@@ -142,7 +144,8 @@ export const useSettingsStore = create<SettingsState>()(
       setCardOpacity: (cardOpacity) => set({ cardOpacity }),
       setDefaultLandingPage: (defaultLandingPage) => set({ defaultLandingPage }),
       setWidgetSyncReminderHours: (widgetSyncReminderHours) => set({ widgetSyncReminderHours }),
-      setWidgetShowNextDaySchedule: (widgetShowNextDaySchedule) => set({ widgetShowNextDaySchedule }),
+      setWidgetShowNextDaySchedule: (widgetShowNextDaySchedule) =>
+        set({ widgetShowNextDaySchedule }),
       setAvatarImage: (avatarImage) => set({ avatarImage }),
       setCustomUserAgent: (customUserAgent) => set({ customUserAgent }),
       setCustomUserAgentEnabled: (customUserAgentEnabled) => set({ customUserAgentEnabled }),
@@ -150,8 +153,11 @@ export const useSettingsStore = create<SettingsState>()(
       setCustomJwxtBaseUrl: (customJwxtBaseUrl) => set({ customJwxtBaseUrl }),
       setSchoolId: (schoolId) => set({ schoolId }),
       setScheduleCompactMode: (scheduleCompactMode) => set({ scheduleCompactMode }),
-      setScheduleWeekPreviewEnabled: (scheduleWeekPreviewEnabled) => set({ scheduleWeekPreviewEnabled }),
+      setScheduleWeekPreviewEnabled: (scheduleWeekPreviewEnabled) =>
+        set({ scheduleWeekPreviewEnabled }),
       setGpaVisible: (gpaVisible) => set({ gpaVisible }),
+      setOverviewLayout: (overviewLayout) =>
+        set({ overviewLayout: normalizeOverviewLayout(overviewLayout) }),
       setGradeGachaEnabled: (gradeGachaEnabled) => set({ gradeGachaEnabled }),
       setNotifyEnabled: (notifyEnabled) => set({ notifyEnabled }),
       setNotifyCheckInterval: (notifyCheckInterval) => set({ notifyCheckInterval }),
@@ -164,16 +170,46 @@ export const useSettingsStore = create<SettingsState>()(
       setAnalyticsConsent: (analyticsConsent) => set({ analyticsConsent }),
       setLastAnalyticsDate: (lastAnalyticsDate) => set({ lastAnalyticsDate }),
       setAnalyticsPromptVersion: (analyticsPromptVersion) => set({ analyticsPromptVersion }),
-      setFeedbackIds: (feedbackIds) => set({ feedbackIds }),
-      setFeedbackHistory: (feedbackHistory) => set({ feedbackHistory }),
+      setEpayNotifyEnabled: (epayNotifyEnabled) => set({ epayNotifyEnabled }),
+      setEpayLastCheckedAt: (username, ts) =>
+        set((state) => ({
+          epayAccountSettings: {
+            ...state.epayAccountSettings,
+            [username]: {
+              lastCheckedAt: ts,
+            },
+          },
+        })),
       setHasHydrated: (v) => set({ hasHydrated: v }),
     }),
     {
       name: STORAGE_KEYS.settings,
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+      merge: (persisted, current) => {
+        const saved: Partial<SettingsState> = {}
+        if (typeof persisted === "object" && persisted !== null && !Array.isArray(persisted)) {
+          // Only current preference keys survive hydration; retired preferences are discarded.
+          for (const key of Object.keys(current) as (keyof SettingsState)[]) {
+            if (typeof current[key] !== "function" && Object.hasOwn(persisted, key)) {
+              Object.assign(saved, { [key]: (persisted as Record<string, unknown>)[key] })
+            }
+          }
+        }
+        return {
+          ...current,
+          ...saved,
+          overviewLayout: normalizeOverviewLayout(saved.overviewLayout),
+          hasHydrated: false,
+        }
       },
-    },
-  ),
-);
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          // Storage failures still permit the default layout after client hydration.
+          queueMicrotask(() => useSettingsStore.getState().setHasHydrated(true))
+          return
+        }
+        state?.setHasHydrated(true)
+      },
+    }
+  )
+)

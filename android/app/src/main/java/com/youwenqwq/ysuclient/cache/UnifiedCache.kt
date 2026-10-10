@@ -30,6 +30,7 @@ object UnifiedCache {
     const val KEY_NOTIFY_ACCOUNT_HASH = "notify_account_hash"
     const val KEY_NOTIFY_SCHEMA_VERSION = "notify_schema_version"
     const val KEY_NOTIFY_SETTINGS = "notify_settings"
+    const val KEY_NOTIFY_POLLING_ENABLED = "notify_polling_enabled"
     const val KEY_CLASS_ALARMS = "class_alarms"
     const val KEY_HAS_SYNCED_SCHEDULE = "has_synced_schedule"
     const val KEY_HAS_SYNCED_EXAMS = "has_synced_exams"
@@ -46,6 +47,23 @@ object UnifiedCache {
     fun clearAll(context: Context) {
         prefs(context).edit().clear().apply()
     }
+    /**
+     * Clear data rendered by home-screen widgets without touching auth or
+     * background-notification configuration.
+     */
+    fun clearWidgetData(context: Context) {
+        prefs(context).edit()
+            .remove(KEY_CACHED_SCHEDULE)
+            .remove(KEY_CACHED_CURRENT_WEEK)
+            .remove(KEY_CACHED_EXAMS)
+            .remove(KEY_WIDGET_CACHED_EXAMS)
+            .remove(KEY_HAS_SYNCED_SCHEDULE)
+            .remove(KEY_HAS_SYNCED_EXAMS)
+            .remove(KEY_LAST_SYNC_TIME)
+            .remove(KEY_LAST_EXAM_SYNC_TIME)
+            .apply()
+    }
+
 
     fun remove(context: Context, key: String) {
         prefs(context).edit().remove(key).apply()
