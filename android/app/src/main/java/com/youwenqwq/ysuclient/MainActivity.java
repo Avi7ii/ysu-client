@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(WebViewCompatPlugin.class);
         registerPlugin(YsuFilePlugin.class);
         registerPlugin(YsuNotifyPlugin.class);
+        registerPlugin(LiquidBottomNavPlugin.class);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
     }

@@ -1,0 +1,18 @@
+Native liquid bottom navigation
+
+KernelSU - https://github.com/tiann/KernelSU
+Pinned commit: 6a2f63240397ea647ede981e0669231c8bf17fee
+License: GPL-3.0 (see GPL-3.0.txt).
+
+The eight files under me/weishu/kernelsu/ui/component are copied without
+rendering or gesture changes from this commit. ThemeBridge and
+LiquidBottomNavPlugin only connect the original renderer to the YSU host.
+
+FloatingBottomBar and the liquid helpers were originally adapted upstream
+from compose-miuix-ui and Kyant0/AndroidLiquidGlass (Apache-2.0).
+https://github.com/compose-miuix-ui/miuix
+https://github.com/Kyant0/AndroidLiquidGlass
+Copyright the respective project contributors. See Apache-2.0.txt.
+
+The four destination icons are the existing Lucide icons from this app.
+See Lucide.txt for their ISC/MIT copyright and permission notices.

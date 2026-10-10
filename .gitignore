@@ -38,6 +38,7 @@
 !/android/app/.gitignore
 !/android/app/src/
 /android/app/src/*
+!/android/app/src/androidTest/
 !/android/app/src/main/
 /android/app/src/main/assets/public/
 

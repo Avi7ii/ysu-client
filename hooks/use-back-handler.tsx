@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react"
 import { BACK_PRIORITY, registerBackHandler } from "@/lib/navigation/back"
+import { obscureLiquidBottomNav } from "@/lib/native/liquid-bottom-nav"
 
 const BackDepth = createContext(0)
 
@@ -32,6 +33,9 @@ export function useBackHandler(
 export function useBackLayer(onBack: () => void, enabled = true) {
   const depth = useContext(BackDepth)
   useBackHandler(onBack, enabled, BACK_PRIORITY.overlay + depth)
+  useLayoutEffect(() => {
+    if (enabled) return obscureLiquidBottomNav()
+  }, [enabled])
 }
 
 export function BackLayer({

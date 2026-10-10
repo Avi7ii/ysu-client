@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
 import type { UpdateChannel } from "../updater"
 import { migrateLocalStorageKey, STORAGE_KEYS } from "../storage/keys"
+import { normalizeBottomNavStyle, type BottomNavStyle } from "../navigation/bottom-nav"
 import {
   createDefaultOverviewLayout,
   normalizeOverviewLayout,
@@ -28,6 +29,7 @@ interface SettingsState {
   cardStyle: CardStyle
   cardOpacity: number
   defaultLandingPage: LandingPage
+  bottomNavStyle: BottomNavStyle
   widgetSyncReminderHours: number
   widgetShowNextDaySchedule: boolean
   avatarImage: string
@@ -66,6 +68,7 @@ interface SettingsState {
   setCardStyle: (style: CardStyle) => void
   setCardOpacity: (opacity: number) => void
   setDefaultLandingPage: (page: LandingPage) => void
+  setBottomNavStyle: (style: BottomNavStyle) => void
   setWidgetSyncReminderHours: (hours: number) => void
   setWidgetShowNextDaySchedule: (v: boolean) => void
   setAvatarImage: (image: string) => void
@@ -107,6 +110,7 @@ export const useSettingsStore = create<SettingsState>()(
       cardStyle: "solid",
       cardOpacity: 100,
       defaultLandingPage: "overview",
+      bottomNavStyle: "classic",
       widgetSyncReminderHours: 24,
       widgetShowNextDaySchedule: false,
       avatarImage: "",
@@ -143,6 +147,8 @@ export const useSettingsStore = create<SettingsState>()(
       setCardStyle: (cardStyle) => set({ cardStyle }),
       setCardOpacity: (cardOpacity) => set({ cardOpacity }),
       setDefaultLandingPage: (defaultLandingPage) => set({ defaultLandingPage }),
+      setBottomNavStyle: (bottomNavStyle) =>
+        set({ bottomNavStyle: normalizeBottomNavStyle(bottomNavStyle) }),
       setWidgetSyncReminderHours: (widgetSyncReminderHours) => set({ widgetSyncReminderHours }),
       setWidgetShowNextDaySchedule: (widgetShowNextDaySchedule) =>
         set({ widgetShowNextDaySchedule }),
@@ -198,6 +204,7 @@ export const useSettingsStore = create<SettingsState>()(
         return {
           ...current,
           ...saved,
+          bottomNavStyle: normalizeBottomNavStyle(saved.bottomNavStyle),
           overviewLayout: normalizeOverviewLayout(saved.overviewLayout),
           hasHydrated: false,
         }
